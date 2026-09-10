@@ -1,0 +1,273 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triqui</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .juego {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 40px;
+        }
+
+        #estado {
+            font-size: 20px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .tablero {
+            width: 330px;
+            height: 330px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .casilla {
+            background: #e9e9e9;
+            border: none;
+            border-radius: 10px;
+            font-size: 65px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .casilla:hover {
+            background: #d8d8d8;
+            transform: scale(1.03);
+        }
+
+        .casilla:disabled {
+            cursor: default;
+        }
+
+        .ganadora {
+            background: #90ee90 !important;
+        }
+
+        #reiniciar {
+            margin-top: 25px;
+            padding: 12px 25px;
+            font-size: 17px;
+            border: none;
+            border-radius: 8px;
+            background: #333;
+            color: white;
+            cursor: pointer;
+        }
+
+        #reiniciar:hover {
+            background: #555;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="juego">
+
+    <h1>Triqui</h1>
+
+    <div id="estado">
+        Turno del jugador X
+    </div>
+
+    <div class="tablero">
+
+        <button class="casilla" data-pos="0"></button>
+        <button class="casilla" data-pos="1"></button>
+        <button class="casilla" data-pos="2"></button>
+
+        <button class="casilla" data-pos="3"></button>
+        <button class="casilla" data-pos="4"></button>
+        <button class="casilla" data-pos="5"></button>
+
+        <button class="casilla" data-pos="6"></button>
+        <button class="casilla" data-pos="7"></button>
+        <button class="casilla" data-pos="8"></button>
+
+    </div>
+
+    <button id="reiniciar">
+        Reiniciar partida
+    </button>
+
+</div>
+
+<script>
+
+    // Estado del tablero
+    let tablero = [
+        "", "", "",
+        "", "", "",
+        "", "", ""
+    ];
+
+    // Jugador actual
+    let jugador = "X";
+
+    // Indica si terminó la partida
+    let juegoTerminado = false;
+
+    // Combinaciones ganadoras
+    const combinacionesGanadoras = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+
+        [0, 4, 8],
+        [2, 4, 6]
+    ];
+
+    const casillas = document.querySelectorAll(".casilla");
+    const estado = document.getElementById("estado");
+    const botonReiniciar = document.getElementById("reiniciar");
+
+
+    // Evento para cada casilla
+    casillas.forEach(casilla => {
+
+        casilla.addEventListener("click", function() {
+
+            const posicion = this.dataset.pos;
+
+            // No permitir jugar en una casilla ocupada
+            if (tablero[posicion] !== "") {
+                return;
+            }
+
+            // No hacer nada si terminó
+            if (juegoTerminado) {
+                return;
+            }
+
+            // Guardar movimiento
+            tablero[posicion] = jugador;
+
+            // Mostrar jugador
+            this.textContent = jugador;
+
+            // Comprobar resultado
+            comprobarJuego();
+
+        });
+
+    });
+
+
+    function comprobarJuego() {
+
+        let ganador = null;
+        let combinacionGanadora = null;
+
+        for (const combinacion of combinacionesGanadoras) {
+
+            const [a, b, c] = combinacion;
+
+            if (
+                tablero[a] !== "" &&
+                tablero[a] === tablero[b] &&
+                tablero[a] === tablero[c]
+            ) {
+                ganador = tablero[a];
+                combinacionGanadora = combinacion;
+                break;
+            }
+        }
+
+
+        // Hay ganador
+        if (ganador !== null) {
+
+            juegoTerminado = true;
+
+            estado.textContent = "¡Ganó el jugador " + ganador + "!";
+
+            // Resaltar las casillas ganadoras
+            combinacionGanadora.forEach(posicion => {
+                casillas[posicion].classList.add("ganadora");
+            });
+
+            return;
+        }
+
+
+        // Empate
+        if (!tablero.includes("")) {
+
+            juegoTerminado = true;
+
+            estado.textContent = "¡Empate!";
+
+            return;
+        }
+
+
+        // Cambiar jugador
+        jugador = jugador === "X" ? "O" : "X";
+
+        estado.textContent = "Turno del jugador " + jugador;
+    }
+
+
+    // Reiniciar partida
+    botonReiniciar.addEventListener("click", reiniciar);
+
+
+    function reiniciar() {
+
+        tablero = [
+            "", "", "",
+            "", "", "",
+            "", "", ""
+        ];
+
+        jugador = "X";
+
+        juegoTerminado = false;
+
+        estado.textContent = "Turno del jugador X";
+
+        casillas.forEach(casilla => {
+            casilla.textContent = "";
+            casilla.classList.remove("ganadora");
+        });
+    }
+
+</script>
+
+</body>
+</html>
+```
